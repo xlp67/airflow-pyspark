@@ -1,4 +1,4 @@
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, DataFrame
 import pymysql
 import os 
 from dotenv import load_dotenv
@@ -18,13 +18,13 @@ JAR_PATH = os.getenv('JAR_PATH')
 def session_spark():
     return SparkSession.builder \
         .appName("CSV para MySQL") \
-        .config("spark.jars", JAR_PATH) \
+        .config("spark.jars", '/opt/spark/jars/mysql-connector-j-8.4.0.jar') \
         .getOrCreate()
 
 def db_data():
-    mysql_url = f"jdbc:mysql://{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_NAME}"
-    mysql_properties = {"user": MYSQL_USER, "password": MYSQL_PASSWORD, "driver": MYSQL_DRIVER}
-    return mysql_url, mysql_properties
+    url = f"jdbc:mysql://{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_NAME}"
+    properties = {"user": MYSQL_USER, "password": MYSQL_PASSWORD, "driver": MYSQL_DRIVER}
+    return url, properties
 
 def read_csv(path: str):
     spark = session_spark()
@@ -35,9 +35,10 @@ def write_table_from_csv(files_name, mode):
     df = read_csv(f'./datasets/{files_name}.csv').groupBy('ano').mean().drop('avg(ano)')
     df.write.jdbc(url, files_name, mode=mode, properties=propert)
 
-def write_table_sql():
-    cities = list_cities()[0]
-    return fetch_weather_data(cities[1], cities[2])
+def write_table_sql(name: str, table: DataFrame):
+    url, propriet = db_data()
+    table.write.jdbc(url=url, table=name, properties=propriet)
+
 
 def get_table(table_name: str):
     url, propert = db_data()
@@ -46,5 +47,3 @@ def get_table(table_name: str):
     df.write.mode("overwrite").parquet(f"{table_name}.parquet")
 
 
-
-print(write_table_sql())
