@@ -1,17 +1,5 @@
-import openmeteo_requests
-import requests_cache
-import pandas as pd
-from geopy.geocoders import Nominatim
-import geonamescache
-from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, DoubleType, TimestampType
-from datetime import datetime, timedelta, timezone 
-
-
-
-import pandas as pd
-
 def list_cities():
+    import pandas as pd
     url = "https://raw.githubusercontent.com/kelvins/Municipios-Brasileiros/master/csv/municipios.csv"
     df = pd.read_csv(url)
     df['nome'] = df["nome"].str.lower().str.replace(" ", "_").tolist()
@@ -19,6 +7,12 @@ def list_cities():
 
 
 def fetch_weather_data(latitude, longitude):
+    from pyspark.sql import SparkSession
+    from pyspark.sql.types import StructType, StructField, DoubleType, TimestampType
+    import openmeteo_requests
+    import requests_cache
+    from datetime import datetime, timedelta, timezone 
+
     spark = SparkSession.builder \
         .config("spark.jars", '/opt/spark/jars/mysql-connector-j-8.4.0.jar') \
         .appName("WeatherApp") \
@@ -86,4 +80,3 @@ def fetch_weather_data(latitude, longitude):
         StructField("boundary_layer_height", DoubleType(), True),
     ])
     return spark.createDataFrame(rows, schema).dropna()
-
