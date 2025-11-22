@@ -1,8 +1,6 @@
 from pyspark.sql import SparkSession, DataFrame
-import pymysql
 import os 
 from dotenv import load_dotenv
-from scripts.meteo_api import fetch_weather_data, list_cities
 
 load_dotenv('../config')
 MYSQL_HOST = os.getenv('MYSQL_HOST')

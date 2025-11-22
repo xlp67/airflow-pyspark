@@ -1,3 +1,9 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.types import StructType, StructField, DoubleType, TimestampType
+import openmeteo_requests
+import requests_cache
+from datetime import datetime, timedelta, timezone 
+
 def list_cities():
     import pandas as pd
     url = "https://raw.githubusercontent.com/kelvins/Municipios-Brasileiros/master/csv/municipios.csv"
@@ -7,12 +13,6 @@ def list_cities():
 
 
 def fetch_weather_data(latitude, longitude):
-    from pyspark.sql import SparkSession
-    from pyspark.sql.types import StructType, StructField, DoubleType, TimestampType
-    import openmeteo_requests
-    import requests_cache
-    from datetime import datetime, timedelta, timezone 
-
     spark = SparkSession.builder \
         .config("spark.jars", '/opt/spark/jars/mysql-connector-j-8.4.0.jar') \
         .appName("WeatherApp") \
@@ -30,7 +30,7 @@ def fetch_weather_data(latitude, longitude):
             "et0_fao_evapotranspiration", "uv_index", "wet_bulb_temperature_2m",
             "total_column_integrated_water_vapour", "boundary_layer_height"
         ],
-        "start_date": "2025-08-19",
+        "start_date": "2025-08-21",
         "end_date": "2025-11-17",
     }
     responses = openmeteo.weather_api(url, params=params)
@@ -38,6 +38,7 @@ def fetch_weather_data(latitude, longitude):
     hourly = response.Hourly()
     start = datetime.fromtimestamp(hourly.Time(), tz=timezone.utc)
     interval = timedelta(seconds=hourly.Interval())
+    
     steps = hourly.Variables(0).ValuesAsNumpy().shape[0]
     dates = [start + i * interval for i in range(steps)]
     variables = {
@@ -80,3 +81,4 @@ def fetch_weather_data(latitude, longitude):
         StructField("boundary_layer_height", DoubleType(), True),
     ])
     return spark.createDataFrame(rows, schema).dropna()
+

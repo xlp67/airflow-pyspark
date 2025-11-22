@@ -79,7 +79,7 @@ airflowVersion: "3.0.2"
 # Images
 images:
   airflow:
-    repository: ~
+    repository: xlp67/airflow
     tag: ~
     # Specifying digest takes precedence over tag.
     digest: ~
@@ -372,7 +372,7 @@ rbac:
 # For Airflow <3.0, LocalKubernetesExecutor and CeleryKubernetesExecutor are also supported.
 # Specify executors in a prioritized list to leverage multiple execution environments as needed:
 # https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/executor/index.html#using-multiple-executors-concurrently
-executor: "CeleryExecutor"
+executor: "KubernetesExecutor"
 
 # If this is true and using LocalExecutor/KubernetesExecutor/CeleryKubernetesExecutor, the scheduler's
 # service account will have access to communicate with the api-server and launch pods.
@@ -514,7 +514,7 @@ data:
   # For Airflow >= 2.4.0 it is possible to not specify the secret again,
   # as Airflow will use sql_alchemy_conn with a db+ scheme prefix by default.
   resultBackendSecretName: ~
-  brokerUrlSecretName: ~
+  brokerUrlSecretName: airflow-broker-url
 
   # Otherwise pass connection values in
   metadataConnection:
@@ -863,16 +863,16 @@ workers:
   # Additional volumes and volume mounts attached to the
   # Airflow Celery workers and pods created with pod-template-file
   extraVolumes: 
-  - name: dags-workers
+  - name: dags-local
     hostPath:
       path: /var/lib/dags
       type: Directory
 
   extraVolumeMounts: 
-  - name: dags-workers
+  - name: dags-local
     mountPath: /opt/airflow/dags
     readOnly: false
-    
+  
   # Mount additional volumes into workers pods. It can be templated like in the following example:
   #   extraVolumes:
   #     - name: my-templated-extra-volume
@@ -1465,9 +1465,16 @@ apiServer:
   #     - name: my-templated-extra-volume
   #       mountPath: "{{ .Values.my_custom_path }}"
   #       readOnly: true
-  extraVolumes: []
+  extraVolumes: 
+  - name: dags-local
+    hostPath:
+      path: /var/lib/dags
+      type: Directory
 
-  extraVolumeMounts: []
+  extraVolumeMounts: 
+  - name: dags-local
+    mountPath: /opt/airflow/dags
+    readOnly: false
 
   # Select certain nodes for Airflow API server pods.
   nodeSelector: {}
@@ -2663,7 +2670,7 @@ redis:
   #   memory: 128Mi
 
   # If set use as redis secret. Make sure to also set data.brokerUrlSecretName value.
-  passwordSecretName: ~
+  passwordSecretName: airflow-redis-password
 
   # Else, if password is set, create secret with it,
   # Otherwise a new password will be generated on install
