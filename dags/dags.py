@@ -1,7 +1,6 @@
 from airflow import DAG
-from airflow.operators.python import PythonOperator
+from airflow.providers.standard.operators.python import PythonOperator
 from datetime import datetime
-
 
 def task_run():
     from scripts.meteo_api import list_cities, fetch_weather_data
@@ -15,9 +14,9 @@ def task_run():
 default_args = {
     'owner': 'airflow',
     'email': ['xlp67@gmail.com'],
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 1,
+    # 'email_on_failure': False,
+    # 'email_on_retry': False,
+    # 'retries': 1,
 }
 
 with DAG(

@@ -14,7 +14,6 @@ def list_cities():
 
 def fetch_weather_data(latitude, longitude):
     spark = SparkSession.builder \
-        .config("spark.jars", '/opt/spark/jars/mysql-connector-j-8.4.0.jar') \
         .appName("WeatherApp") \
         .getOrCreate()
     cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
@@ -30,7 +29,7 @@ def fetch_weather_data(latitude, longitude):
             "et0_fao_evapotranspiration", "uv_index", "wet_bulb_temperature_2m",
             "total_column_integrated_water_vapour", "boundary_layer_height"
         ],
-        "start_date": "2025-08-21",
+        "start_date": "2025-08-22",
         "end_date": "2025-11-17",
     }
     responses = openmeteo.weather_api(url, params=params)
