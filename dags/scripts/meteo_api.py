@@ -4,19 +4,15 @@ import openmeteo_requests
 import requests_cache
 from datetime import datetime, timedelta, timezone 
 
-def list_cities():
+def read_csv_path(path):
     import pandas as pd
-    url = "https://raw.githubusercontent.com/kelvins/Municipios-Brasileiros/master/csv/municipios.csv"
-    df = pd.read_csv(url)
+    df = pd.read_csv(path)
     df['nome'] = df["nome"].str.lower().str.replace(" ", "_").tolist()
     return df[['nome', 'latitude', 'longitude']]
 
 
-def fetch_weather_data(latitude, longitude):
-    spark = SparkSession.builder \
-        .appName("WeatherApp") \
-        .getOrCreate()
-    cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
+def fetch_weather_data(spark, latitude, longitude):
+    cache_session = requests_cache.CachedSession('/tmp/requests_cache', expire_after=3600)
     openmeteo = openmeteo_requests.Client(session=cache_session)
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
@@ -29,7 +25,7 @@ def fetch_weather_data(latitude, longitude):
             "et0_fao_evapotranspiration", "uv_index", "wet_bulb_temperature_2m",
             "total_column_integrated_water_vapour", "boundary_layer_height"
         ],
-        "start_date": "2025-08-22",
+        "start_date": "2025-08-24",
         "end_date": "2025-11-17",
     }
     responses = openmeteo.weather_api(url, params=params)
@@ -80,4 +76,3 @@ def fetch_weather_data(latitude, longitude):
         StructField("boundary_layer_height", DoubleType(), True),
     ])
     return spark.createDataFrame(rows, schema).dropna()
-

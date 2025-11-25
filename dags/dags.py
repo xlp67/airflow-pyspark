@@ -1,22 +1,30 @@
 from airflow import DAG
 from airflow.providers.standard.operators.python import PythonOperator
+from airflow.models import Variable
 from datetime import datetime
+from py_spark import url_propriet
+
+
 
 def task_run():
-    from scripts.meteo_api import list_cities, fetch_weather_data
-    cities = list_cities()
+    from scripts.meteo_api import read_csv_path, fetch_weather_data
+    from py_spark import write_table_sql, session_spark
+    cities = read_csv_path('/opt/airflow/dags/datasets/municipios.csv')
     nomes = cities['nome'].values
     latitudes = cities['latitude'].values
     longitudes = cities['longitude'].values
-    fetch_weather_data(latitudes[0], longitudes[0]).show()
+    url, propriet = url_propriet()
+    session = session_spark()
+    weather_data = fetch_weather_data(session, latitudes[0], longitudes[0])
+    write_table_sql(nomes[0],weather_data, url, propriet)
 
 
 default_args = {
     'owner': 'airflow',
     'email': ['xlp67@gmail.com'],
-    # 'email_on_failure': False,
-    # 'email_on_retry': False,
-    # 'retries': 1,
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
 }
 
 with DAG(
