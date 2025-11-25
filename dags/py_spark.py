@@ -17,7 +17,7 @@ JAR_PATH = os.getenv('JAR_PATH')
 def session_spark():
     return SparkSession.builder \
         .appName("CSV para MySQL") \
-        .config("spark.jars", '/opt/spark/jars/mysql-connector-j-8.4.0.jar') \
+        .config("spark.jars", '/opt/airflow/spark/jars/mysql-connector-j-8.4.0.jar') \
         .getOrCreate()
 
 def url_propriet():
